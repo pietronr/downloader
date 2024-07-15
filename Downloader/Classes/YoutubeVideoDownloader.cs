@@ -28,13 +28,16 @@ public class YoutubeVideoDownloader : BaseDownloader
             var streamInfo = streams[0];
             var stream = await _httpClient.GetStreamAsync(streamInfo.Url);
 
+            //criar pasta na área de trabalho caso a pessoa escolha essa opção
+            //resolver conversão mp3
+            Directory.CreateDirectory(outputDirectory);
             string outputFilePath = Path.Combine(outputDirectory, $"{sanitizedTitle}.{streamInfo.Container}");
             using var outputStream = File.Create(outputFilePath);
             await stream.CopyToAsync(outputStream);
 
             if (saveOnlyAudio)
             {
-                string tempFilePath = Path.Combine(Path.GetTempPath(), "tempfile.mp4");
+                string tempFilePath = Path.Combine(Path.GetTempPath(), "tempfile.mp3");
                 Mp3Helper.ConvertToMp3(tempFilePath, outputFilePath);
                 File.Delete(tempFilePath);
             }

@@ -5,6 +5,7 @@ public abstract class BaseDownloader : IDisposable
     protected readonly HttpClient _httpClient;
 
     protected bool _hasInitialized;
+    protected bool _shouldSaveAtDesktop;
 
     protected string _outputDirectory;
     protected string[] _urlArray;
@@ -26,6 +27,7 @@ public abstract class BaseDownloader : IDisposable
 
         if (outputDirectory == null)
         {
+            _shouldSaveAtDesktop = true;
             outputDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         }
         else
