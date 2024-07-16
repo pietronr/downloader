@@ -38,17 +38,25 @@ public class YoutubeVideoDownloader : BaseDownloader
     {
         var (outputFilePath, fileStreamPath) = SetFilePaths(stream.ShouldSaveOnlyAudio, stream.FileTitle);
 
-        using var outputStream = new FileStream(fileStreamPath, FileMode.Create, FileAccess.Write);
-        await stream.Stream.CopyToAsync(outputStream);
-
-        outputStream.Dispose();
-
-        if (stream.ShouldSaveOnlyAudio)
+        if (!File.Exists(outputFilePath))
         {
-            Mp3Helper.ConvertToMp3(fileStreamPath, outputFilePath);
-        }
+            using var outputStream = new FileStream(fileStreamPath, FileMode.Create, FileAccess.Write);
+            await stream.Stream.CopyToAsync(outputStream);
 
-        Console.WriteLine($"Arquivo salvo com sucesso: {outputFilePath}");
+            outputStream.Dispose();
+
+            if (stream.ShouldSaveOnlyAudio)
+            {
+                Console.WriteLine($"Convertendo para .mp3: {outputFilePath}");
+                Mp3Helper.ConvertToMp3(fileStreamPath, outputFilePath);
+            }
+
+            Console.WriteLine($"Arquivo salvo com sucesso: {outputFilePath}");
+        }
+        else
+        {
+            Console.WriteLine($"Arquivo já existente: {outputFilePath}");
+        }
     }
 
     private (string outputFilePath, string fileStreamPath) SetFilePaths(bool shouldSaveOnlyAudio, string fileTitle)
