@@ -13,4 +13,18 @@
     <PackageReference Include="YoutubeExplode" Version="6.3.16" />
   </ItemGroup>
 
+  <Target Name="MoveDllsToSubfolderMac" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+    <!--Movendo dlls para pasta libs no caso de publicação MAC-->
+    <ItemGroup>
+      <DllFiles Include="$(PublishDir)**\*.dll" Exclude="$(PublishDir)$(ProjectName).dll" />
+    </ItemGroup>
+    <Move SourceFiles="@(DllFiles)" DestinationFolder="$(PublishDir)libs\" />
+
+    <!--Movendo dylibs para pasta native-libs no caso de publicação MAC-->
+    <ItemGroup>
+      <DylibFiles Include="$(PublishDir)**\*.dylib" />
+    </ItemGroup>
+    <Move SourceFiles="@(DylibFiles)" DestinationFolder="$(PublishDir)native_libs\" />
+  </Target>
+
 </Project>
