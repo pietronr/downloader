@@ -32,6 +32,8 @@ public abstract class BaseDownloader : IDisposable
     {
         string outputDirectory = ReadUserInput("Digite onde deseja salvar os vídeos ou deixe em branco caso queira salvar na Área de trabalho:");
 
+        while (!Directory.Exists(outputDirectory))
+        {
         if (outputDirectory.IsNullOrEmpty())
         {
             string appFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), _folderName);
@@ -42,11 +44,10 @@ public abstract class BaseDownloader : IDisposable
             }
 
             outputDirectory = appFolder;
+                break;
         }
         else
         {
-            while (!Directory.Exists(outputDirectory))
-            {
                 Console.WriteLine("Caminho inválido");
                 outputDirectory = ReadUserInput("Digite novamente o caminho:");
             }
