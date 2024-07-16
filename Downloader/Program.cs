@@ -1,4 +1,4 @@
-﻿using Scripts.Classes.Youtube;
+﻿using Downloader.Classes.Youtube;
 
 using var download = new YoutubeVideoDownloader();
 download.Initialize();

@@ -4,7 +4,7 @@ using YoutubeExplode.Videos.Streams;
 using YoutubeExplode.Videos;
 using Downloader.Classes;
 
-namespace Scripts.Classes.Youtube;
+namespace Downloader.Classes.Youtube;
 
 public class YoutubeVideoDownloader : BaseDownloader
 {
