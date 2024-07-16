@@ -53,11 +53,11 @@ public class YoutubeVideoDownloader : BaseDownloader
 
     private (string outputFilePath, string fileStreamPath) SetFilePaths(bool shouldSaveOnlyAudio, string fileTitle)
     {
-        string defaultPath = Path.Combine(_outputDirectory, $"{fileTitle}.mp3");
+        string defaultPath = Path.Combine(_outputDirectory, $"{fileTitle}.mp4");
 
         if (shouldSaveOnlyAudio)
         {
-            return (defaultPath, Path.Combine(Path.GetTempPath(), "tempfile.mp3"));
+            return (Path.Combine(_outputDirectory, $"{fileTitle}.mp3"), Path.Combine(Path.GetTempPath(), "tempfile.mp3"));
         }
         else
         {
