@@ -22,7 +22,7 @@ public class YoutubeVideoDownloader : BaseDownloader
 
         try
         {
-            var streamInfo = await ExtractVideoStream(video);
+            var streamInfo = await ExtractStreamInfo(video);
 
             string sanitizedTitle = video.Title.SanitizeFilePathString();
 
@@ -78,11 +78,11 @@ public class YoutubeVideoDownloader : BaseDownloader
         }
     }
 
-    private async Task<IStreamInfo> ExtractVideoStream(Video video)
+    private async Task<IStreamInfo> ExtractStreamInfo(Video video)
     {
         var streamManifest = await _youtubeClient.Videos.Streams.GetManifestAsync(video.Id);
 
-        IStreamInfo streamInfo = streamManifest.GetMuxedStreams().OrderByDescending(s => s.VideoQuality).ToArray()[0];
+       IStreamInfo streamInfo = streamManifest.GetMuxedStreams().OrderByDescending(s => s.VideoQuality).ToArray()[0];
 
         return streamInfo;
     }
