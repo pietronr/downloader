@@ -94,7 +94,7 @@ public abstract class BaseDownloader : IDisposable
 
         try
         {
-            await Task.WhenAll(tasks.AsParallel());
+            await Task.WhenAll(tasks);
         }
         catch
         {
