@@ -66,7 +66,7 @@ public abstract class BaseDownloader : IDisposable
 
         foreach (string url in _urlArray)
         {
-            tasks.Add(DownloadVideo(url));
+            tasks.Add(DownloadAndSaveVideo(url));
         }
 
         try
@@ -83,10 +83,25 @@ public abstract class BaseDownloader : IDisposable
     }
 
     /// <summary>
+    /// Realiza o download e o salvamento do vídeo passado via URL.
+    /// </summary>
+    public virtual async Task DownloadAndSaveVideo(string videoUrl)
+    {
+        DownloadedStream stream = await DownloadVideo(videoUrl);
+
+        await SaveVideo(stream);
+    }
+
+    /// <summary>
     /// Controla a operação de download do vídeo.
     /// </summary>
     /// <param name="url">URL para download.</param>
-    public abstract Task DownloadVideo(string videoUrl);
+    public abstract Task<DownloadedStream> DownloadVideo(string videoUrl);
+
+    /// <summary>
+    /// Controla a operação de salvamento do vídeo.
+    /// </summary>
+    public abstract Task SaveVideo(DownloadedStream stream);
 
     /// <summary>
     /// Lê a entrada do usuário no console.
