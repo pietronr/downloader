@@ -7,7 +7,8 @@ public abstract class BaseDownloader : IDisposable
     protected readonly HttpClient _httpClient;
 
     protected bool _hasInitialized;
-    
+    protected bool _shouldSaveOnlyAudio;
+
     protected const string _folderName = "Pokz_Midias";
     protected string _outputDirectory;
     protected string[] _urlArray;
@@ -54,6 +55,22 @@ public abstract class BaseDownloader : IDisposable
 
         _urlArray = urls!.Split(separator, StringSplitOptions.TrimEntries);
 
+        string? option = ReadUserInput("\nDigite a opção que deseja para salvamento:\n" +
+                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio")?.Trim();
+
+        while (option == null || (option != "1" && option != "2"))
+        {
+            Console.WriteLine("Opção inválida");
+            option = ReadUserInput("Digite uma opção válida:");
+        }
+
+        int selectedOption = int.Parse(option);
+
+        if (selectedOption == 2)
+        {
+            _shouldSaveOnlyAudio = true;
+        }
+
         _hasInitialized = true;
     }
 
@@ -72,7 +89,7 @@ public abstract class BaseDownloader : IDisposable
 
         foreach (string url in _urlArray)
         {
-            tasks.Add(DownloadAndSaveVideo(url));
+            tasks.Add(DownloadAndSaveMidia(url));
         }
 
         try
@@ -89,25 +106,25 @@ public abstract class BaseDownloader : IDisposable
     }
 
     /// <summary>
-    /// Realiza o download e o salvamento do vídeo passado via URL.
+    /// Realiza o download e o salvamento da mídia passada via URL.
     /// </summary>
-    public virtual async Task DownloadAndSaveVideo(string videoUrl)
+    public virtual async Task DownloadAndSaveMidia(string midiaUrl)
     {
-        DownloadedStream stream = await DownloadVideo(videoUrl);
+        DownloadedStream stream = await DownloadMidia(midiaUrl);
 
-        await SaveVideo(stream);
+        await SaveMidia(stream);
     }
 
     /// <summary>
-    /// Controla a operação de download do vídeo.
+    /// Controla a operação de download da mídia.
     /// </summary>
     /// <param name="url">URL para download.</param>
-    public abstract Task<DownloadedStream> DownloadVideo(string videoUrl);
+    public abstract Task<DownloadedStream> DownloadMidia(string midiaUrl);
 
     /// <summary>
-    /// Controla a operação de salvamento do vídeo.
+    /// Controla a operação de salvamento da mídia.
     /// </summary>
-    public abstract Task SaveVideo(DownloadedStream stream);
+    public abstract Task SaveMidia(DownloadedStream stream);
 
     /// <summary>
     /// Lê a entrada do usuário no console.

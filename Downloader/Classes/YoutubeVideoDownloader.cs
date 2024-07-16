@@ -14,19 +14,19 @@ public class YoutubeVideoDownloader : BaseDownloader
         _youtubeClient = new YoutubeClient();
     }
 
-    public override async Task<DownloadedStream> DownloadVideo(string videoUrl)
+    public override async Task<DownloadedStream> DownloadMidia(string midiaUrl)
     {
-        var video = await _youtubeClient.Videos.GetAsync(videoUrl);
+        var video = await _youtubeClient.Videos.GetAsync(midiaUrl);
 
         try
         {
-            var (streamInfo, saveOnlyAudio) = await ExtractVideoStream(video);
+            var streamInfo = await ExtractVideoStream(video);
 
             string sanitizedTitle = video.Title.SanitizeFilePathString();
             var stream = await _httpClient.GetStreamAsync(streamInfo.Url);
 
             Console.WriteLine("\nDownload concluído!");
-            return new DownloadedStream(stream, sanitizedTitle, saveOnlyAudio);
+            return new DownloadedStream(stream, sanitizedTitle);
         }
         catch
         {
@@ -34,9 +34,9 @@ public class YoutubeVideoDownloader : BaseDownloader
         }
     }
 
-    public override async Task SaveVideo(DownloadedStream stream)
+    public override async Task SaveMidia(DownloadedStream stream)
     {
-        var (outputFilePath, fileStreamPath) = SetFilePaths(stream.ShouldSaveOnlyAudio, stream.FileTitle);
+        var (outputFilePath, fileStreamPath) = SetFilePaths(stream.FileTitle);
 
         if (!File.Exists(outputFilePath))
         {
@@ -45,7 +45,7 @@ public class YoutubeVideoDownloader : BaseDownloader
 
             outputStream.Dispose();
 
-            if (stream.ShouldSaveOnlyAudio)
+            if (_shouldSaveOnlyAudio)
             {
                 Console.WriteLine($"Convertendo para .mp3: {outputFilePath}");
                 Mp3Helper.ConvertToMp3(fileStreamPath, outputFilePath);
@@ -59,11 +59,11 @@ public class YoutubeVideoDownloader : BaseDownloader
         }
     }
 
-    private (string outputFilePath, string fileStreamPath) SetFilePaths(bool shouldSaveOnlyAudio, string fileTitle)
+    private (string outputFilePath, string fileStreamPath) SetFilePaths(string fileTitle)
     {
         string defaultPath = Path.Combine(_outputDirectory, $"{fileTitle}.mp4");
 
-        if (shouldSaveOnlyAudio)
+        if (_shouldSaveOnlyAudio)
         {
             return (Path.Combine(_outputDirectory, $"{fileTitle}.mp3"), Path.Combine(Path.GetTempPath(), "tempfile.mp3"));
         }
@@ -73,29 +73,12 @@ public class YoutubeVideoDownloader : BaseDownloader
         }
     }
 
-    private async Task<(IStreamInfo streamInfo, bool saveOnlyAudio)> ExtractVideoStream(Video video)
+    private async Task<IStreamInfo> ExtractVideoStream(Video video)
     {
         var streamManifest = await _youtubeClient.Videos.Streams.GetManifestAsync(video.Id);
 
-        string? option = ReadUserInput("\nDigite a opção que deseja para salvamento:\n" +
-                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio")?.Trim();
-
-        while (option == null || (option != "1" && option != "2"))
-        {
-            Console.WriteLine("Opção inválida");
-            option = ReadUserInput("Digite uma opção válida:");
-        }
-
-        int selectedOption = int.Parse(option);
         IStreamInfo streamInfo = streamManifest.GetMuxedStreams().OrderByDescending(s => s.VideoQuality).ToArray()[0];
 
-        if (selectedOption == 1)
-        {
-            return (streamInfo, false);
-        }
-        else
-        {
-            return (streamInfo, true);
-        }
+        return streamInfo;
     }
 }
