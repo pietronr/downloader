@@ -50,13 +50,12 @@ public abstract class BaseDownloader : IDisposable
 
         _outputDirectory = outputDirectory;
 
-        string? urls = ReadUserInput("\nCole a URL do(s) vídeo(s) que deseja baixar. Se for mais de 1, coloque ',' ou ';' para separá-los.\n" +
-            "Para colar, copie e pressione o botão direito do mouse.");
+        string? urls = ReadUserInput("\nCole a URL do(s) vídeo(s) que deseja baixar. Se for mais de 1, coloque ',' ou ';' para separá-los.\n");
 
         _urlArray = urls!.Split(separator, StringSplitOptions.TrimEntries);
 
         string? option = ReadUserInput("\nDigite a opção que deseja para salvamento:\n" +
-                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio")?.Trim();
+                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio (.MP3)\n")?.Trim();
 
         while (option == null || (option != "1" && option != "2"))
         {
