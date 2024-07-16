@@ -15,11 +15,14 @@ public abstract class BaseDownloader : IDisposable
     protected string[] _urlArray;
     protected static readonly char[] separator = [',', ';'];
 
+    protected Dictionary<string, string> _errors;
+
     protected BaseDownloader()
     {
         _httpClient = new HttpClient();
         _outputDirectory = string.Empty;
         _urlArray = [];
+        _errors = [];
     }
 
     /// <summary>
@@ -84,24 +87,39 @@ public abstract class BaseDownloader : IDisposable
         if (!_hasInitialized)
         {
             Console.WriteLine("Inicialize a classe para execução do dowload.");
-            return false;
         }
 
         List<Task> tasks = [];
 
+        string currentUrl = string.Empty;
         foreach (string url in _urlArray)
         {
-            tasks.Add(DownloadAndSaveMidia(url));
+            currentUrl = url;
+            tasks.Add(DownloadAndSaveMidia(currentUrl));
         }
 
         try
         {
             await Task.WhenAll(tasks.AsParallel());
-            Console.WriteLine("-------------------------------------------------\nDOWNLOAD FINALIZADO!\nPressione qualquer tecla para fechar essa tela.");
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine("Erro no download");
+            _errors.Add(currentUrl, ex.Message);
+        }
+        finally
+        {
+            Console.WriteLine("-------------------------------------------------\nDOWNLOAD FINALIZADO!");
+        }
+
+        if (_errors.Count > 0)
+        {
+            Console.WriteLine("\nErro no download das seguintes mídias:");
+
+            foreach (var error in _errors)
+            {
+                Console.WriteLine($"URL: {error.Key}; razão: {error.Value}");
+            }
+
             return false;
         }
 
