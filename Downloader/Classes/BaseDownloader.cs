@@ -15,14 +15,11 @@ public abstract class BaseDownloader : IDisposable
     protected List<string> _urlList;
     protected static readonly char[] separator = [',', ';'];
 
-    protected Dictionary<string, string> _errors;
-
     protected BaseDownloader()
     {
         _httpClient = new HttpClient();
         _outputDirectory = string.Empty;
         _urlList = [];
-        _errors = [];
     }
 
     /// <summary>
@@ -34,20 +31,20 @@ public abstract class BaseDownloader : IDisposable
 
         while (!Directory.Exists(outputDirectory))
         {
-        if (outputDirectory.IsNullOrEmpty())
-        {
-            string appFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), _folderName);
-
-            if (!Directory.Exists(appFolder))
+            if (outputDirectory.IsNullOrEmpty())
             {
-                Directory.CreateDirectory(appFolder);
-            }
+                string appFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), _folderName);
 
-            outputDirectory = appFolder;
+                if (!Directory.Exists(appFolder))
+                {
+                    Directory.CreateDirectory(appFolder);
+                }
+
+                outputDirectory = appFolder;
                 break;
-        }
-        else
-        {
+            }
+            else
+            {
                 Console.WriteLine("Caminho inválido");
                 outputDirectory = ReadUserInput("Digite novamente o caminho:");
             }
@@ -172,28 +169,15 @@ public abstract class BaseDownloader : IDisposable
     /// </summary>
     public async Task FullDownload()
     {
-        List<Func<Task>> tasks = [];
+        var invalidMidias = await TasksHelper.ExecuteTasksWithLimitedConcurrency(_urlList, DownloadAndSaveMidia);
 
-        string currentUrl = string.Empty;
+        Console.WriteLine("-------------------------------------------------\nPROCESSO FINALIZADO!");
 
-        try
-        {
-            await TasksHelper.ExecuteTasksWithLimitedConcurrency(_urlList, DownloadAndSaveMidia);
-        }
-        catch (Exception ex)
-        {
-            _errors.Add(currentUrl, ex.Message);
-        }
-        finally
-        {
-            Console.WriteLine("-------------------------------------------------\nPROCESSO FINALIZADO!");
-        }
-
-        if (_errors.Count > 0)
+        if (!invalidMidias.IsEmpty)
         {
             Console.WriteLine("\nErro no download das seguintes mídias:");
 
-            foreach (var error in _errors)
+            foreach (var error in invalidMidias)
             {
                 Console.WriteLine($"URL: {error.Key}; razão: {error.Value}");
             }
