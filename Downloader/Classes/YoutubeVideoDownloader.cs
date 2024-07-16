@@ -18,10 +18,10 @@ public class YoutubeVideoDownloader : BaseDownloader
     {
         Console.WriteLine("\nIniciando download...");
 
-        var video = await _youtubeClient.Videos.GetAsync(midiaUrl);
-
         try
         {
+            var video = await _youtubeClient.Videos.GetAsync(midiaUrl);
+
             var streamInfo = await ExtractStreamInfo(video);
 
             string sanitizedTitle = video.Title.SanitizeFilePathString();
