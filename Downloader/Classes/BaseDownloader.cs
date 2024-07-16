@@ -1,4 +1,6 @@
-﻿namespace Downloader.Classes;
+﻿using Downloader.Helpers;
+
+namespace Downloader.Classes;
 
 public abstract class BaseDownloader : IDisposable
 {
@@ -25,7 +27,7 @@ public abstract class BaseDownloader : IDisposable
     {
         string? outputDirectory = ReadUserInput("Digite onde deseja salvar os vídeos ou deixe em branco caso queira salvar na Área de trabalho:");
 
-        if (outputDirectory == null)
+        if (outputDirectory.IsNullOrEmpty())
         {
             _shouldSaveAtDesktop = true;
             outputDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -64,7 +66,7 @@ public abstract class BaseDownloader : IDisposable
 
         foreach (string url in _urlArray)
         {
-            tasks.Add(DownloadVideo(url, _outputDirectory));
+            tasks.Add(DownloadVideo(url));
         }
 
         try
@@ -84,8 +86,7 @@ public abstract class BaseDownloader : IDisposable
     /// Controla a operação de download do vídeo.
     /// </summary>
     /// <param name="url">URL para download.</param>
-    /// <param name="outputDirectory">Diretório onde o vídeo deve ser salvo.</param>
-    public abstract Task DownloadVideo(string videoUrl, string outputDirectory);
+    public abstract Task DownloadVideo(string videoUrl);
 
     /// <summary>
     /// Lê a entrada do usuário no console.
