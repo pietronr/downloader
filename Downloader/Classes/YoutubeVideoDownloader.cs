@@ -36,18 +36,33 @@ public class YoutubeVideoDownloader : BaseDownloader
 
     public override async Task SaveVideo(DownloadedStream stream)
     {
-        string outputFilePath = Path.Combine(_outputDirectory, $"{stream.FileTitle}.mp4");
-        using var outputStream = File.Create(outputFilePath);
+        var (outputFilePath, fileStreamPath) = SetFilePaths(stream.ShouldSaveOnlyAudio, stream.FileTitle);
+
+        using var outputStream = new FileStream(fileStreamPath, FileMode.Create, FileAccess.Write);
         await stream.Stream.CopyToAsync(outputStream);
+
+        outputStream.Dispose();
 
         if (stream.ShouldSaveOnlyAudio)
         {
-            string tempFilePath = Path.Combine(Path.GetTempPath(), "tempfile.mp3");
-            Mp3Helper.ConvertToMp3(tempFilePath, outputFilePath);
-            File.Delete(tempFilePath);
+            Mp3Helper.ConvertToMp3(fileStreamPath, outputFilePath);
         }
 
         Console.WriteLine($"Arquivo salvo com sucesso: {outputFilePath}");
+    }
+
+    private (string outputFilePath, string fileStreamPath) SetFilePaths(bool shouldSaveOnlyAudio, string fileTitle)
+    {
+        string defaultPath = Path.Combine(_outputDirectory, $"{fileTitle}.mp3");
+
+        if (shouldSaveOnlyAudio)
+        {
+            return (defaultPath, Path.Combine(Path.GetTempPath(), "tempfile.mp3"));
+        }
+        else
+        {
+            return (defaultPath, defaultPath);
+        }
     }
 
     private async Task<(IStreamInfo streamInfo, bool saveOnlyAudio)> ExtractVideoStream(Video video)

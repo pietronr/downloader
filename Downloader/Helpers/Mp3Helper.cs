@@ -12,8 +12,17 @@ public static class Mp3Helper
     /// <param name="outputPath">Caminho de saída.</param>
     public static void ConvertToMp3(string inputPath, string outputPath)
     {
-        using var reader = new MediaFoundationReader(inputPath);
-        using var writer = new LameMP3FileWriter(outputPath, reader.WaveFormat, LAMEPreset.STANDARD);
-        reader.CopyTo(writer);
+        try
+        {
+            using var reader = new MediaFoundationReader(inputPath);
+            using var writer = new LameMP3FileWriter(outputPath, reader.WaveFormat, LAMEPreset.STANDARD);
+            reader.CopyTo(writer);
+            
+            File.Delete(inputPath);
+        }
+        catch
+        {
+            File.Delete(inputPath);
+        }
     }
 }
