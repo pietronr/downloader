@@ -1,5 +1,3 @@
-using YoutubeExplode.Videos.Streams;
-
 namespace Downloader.Classes;
 
 public class DownloadedStream(Stream stream, string fileTitle, bool shouldSaveOnlyAudio) 
