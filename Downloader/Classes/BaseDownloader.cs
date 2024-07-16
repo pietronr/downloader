@@ -145,7 +145,7 @@ public abstract class BaseDownloader : IDisposable
             continueInput = ReadUserInput("\nDeseja realizar mais downloads? Digite S (SIM) ou N (NÃO).").Trim().ToLower();
         }
 
-        Console.WriteLine("Obrigado por usar! Pressione qualquer tecla para fechar essa tela.");
+        Console.WriteLine("\nObrigado por usar! Pressione qualquer tecla para fechar essa tela.");
         return true;
     }
 
@@ -171,18 +171,18 @@ public abstract class BaseDownloader : IDisposable
     /// </summary>
     public async Task FullDownload()
     {
-        List<Task> tasks = [];
+        List<Func<Task>> tasks = [];
 
         string currentUrl = string.Empty;
         foreach (string url in _urlList)
         {
             currentUrl = url;
-            tasks.Add(DownloadAndSaveMidia(currentUrl));
+            tasks.Add(async () => await DownloadAndSaveMidia(url));
         }
 
         try
         {
-            await Task.WhenAll(tasks.AsParallel());
+            await Task.WhenAll(tasks.Select(async task => await task()));
         }
         catch (Exception ex)
         {
