@@ -53,7 +53,7 @@ public class YoutubeVideoDownloader : BaseDownloader
             if (_shouldSaveOnlyAudio)
             {
                 Console.WriteLine($"Convertendo para .mp3: {mp4FilePath}");
-                Mp3Helper.ConvertToMp3(mp4FilePath, mp3FilePath);
+                Mp3Helper.ConvertToMp3(mp4FilePath, mp3FilePath, _saveAs320kbps);
             }
 
             Console.WriteLine($"Arquivo salvo com sucesso!");

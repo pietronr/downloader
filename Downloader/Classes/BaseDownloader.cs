@@ -8,6 +8,7 @@ public abstract class BaseDownloader : IDisposable
 
     protected bool _hasInitialized;
     protected bool _shouldSaveOnlyAudio;
+    protected bool _saveAs320kbps;
 
     protected const string _folderName = "Pokz_Midias";
     protected string _outputDirectory;
@@ -55,9 +56,9 @@ public abstract class BaseDownloader : IDisposable
         _urlArray = urls!.Split(separator, StringSplitOptions.TrimEntries);
 
         string? option = ReadUserInput("\nDigite a opção que deseja para salvamento:\n" +
-                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio (.MP3)\n")?.Trim();
+                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio (.MP3)\n3 - Apenas áudio 320KBPS (.MP3)")?.Trim();
 
-        while (option == null || (option != "1" && option != "2"))
+        while (option == null || (option != "1" && option != "2" && option != "3"))
         {
             Console.WriteLine("Opção inválida");
             option = ReadUserInput("Digite uma opção válida:");
@@ -65,8 +66,9 @@ public abstract class BaseDownloader : IDisposable
 
         int selectedOption = int.Parse(option);
 
-        if (selectedOption == 2)
+        if (selectedOption == 2 || selectedOption == 3)
         {
+            if (selectedOption == 3) _saveAs320kbps = true;
             _shouldSaveOnlyAudio = true;
         }
 
