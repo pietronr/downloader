@@ -4,4 +4,4 @@ using var download = new YoutubeVideoDownloader();
 download.Initialize();
 await download.ExecuteDownload();
 
-Console.ReadKey();
+Console.Read();

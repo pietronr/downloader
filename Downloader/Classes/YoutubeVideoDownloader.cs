@@ -16,6 +16,8 @@ public class YoutubeVideoDownloader : BaseDownloader
 
     public override async Task<DownloadedStream> DownloadMidia(string midiaUrl)
     {
+        Console.WriteLine("\nIniciando download...");
+
         var video = await _youtubeClient.Videos.GetAsync(midiaUrl);
 
         try
@@ -23,6 +25,7 @@ public class YoutubeVideoDownloader : BaseDownloader
             var streamInfo = await ExtractVideoStream(video);
 
             string sanitizedTitle = video.Title.SanitizeFilePathString();
+
             var stream = await _httpClient.GetStreamAsync(streamInfo.Url);
 
             Console.WriteLine("\nDownload concluído!");
@@ -36,30 +39,32 @@ public class YoutubeVideoDownloader : BaseDownloader
 
     public override async Task SaveMidia(DownloadedStream stream)
     {
-        var (outputFilePath, fileStreamPath) = SetFilePaths(stream.FileTitle);
+        Console.WriteLine("\nSalvando mídia...");
 
-        if (!File.Exists(outputFilePath))
+        var (mp4FilePath, mp3FilePath) = SetFilePaths(stream.FileTitle);
+
+        if (!File.Exists(mp4FilePath) || !File.Exists(mp3FilePath))
         {
-            using var outputStream = new FileStream(fileStreamPath, FileMode.Create, FileAccess.Write);
-            await stream.Stream.CopyToAsync(outputStream);
+            using var mp4Stream = new FileStream(mp4FilePath, FileMode.Create, FileAccess.Write);
+            await stream.Stream.CopyToAsync(mp4Stream);
 
-            outputStream.Dispose();
+            mp4Stream.Dispose();
 
             if (_shouldSaveOnlyAudio)
             {
-                Console.WriteLine($"Convertendo para .mp3: {outputFilePath}");
-                Mp3Helper.ConvertToMp3(fileStreamPath, outputFilePath);
+                Console.WriteLine($"Convertendo para .mp3: {mp4FilePath}");
+                Mp3Helper.ConvertToMp3(mp4FilePath, mp3FilePath);
             }
 
-            Console.WriteLine($"Arquivo salvo com sucesso: {outputFilePath}");
+            Console.WriteLine($"Arquivo salvo com sucesso!");
         }
         else
         {
-            Console.WriteLine($"Arquivo já existente: {outputFilePath}");
+            Console.WriteLine($"Arquivo já existente na pasta selecionada!");
         }
     }
 
-    private (string outputFilePath, string fileStreamPath) SetFilePaths(string fileTitle)
+    private (string mp4FilePath, string mp3FilePath) SetFilePaths(string fileTitle)
     {
         string defaultPath = Path.Combine(_outputDirectory, $"{fileTitle}.mp4");
 
