@@ -50,7 +50,7 @@ public abstract class BaseDownloader : IDisposable
 
         _outputDirectory = outputDirectory;
 
-        string? urls = ReadUserInput("\nCole a URL do(s) vídeo(s) que deseja baixar. Se for mais de 1, coloque ',' ou ';' para separá-los.\n");
+        string? urls = ReadUserInput("\nCole a URL do(s) vídeo(s) que deseja baixar. Se for mais de 1, coloque ',' ou ';' para separá-los.");
 
         _urlArray = urls!.Split(separator, StringSplitOptions.TrimEntries);
 
