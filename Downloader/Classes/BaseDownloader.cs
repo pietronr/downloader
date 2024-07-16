@@ -7,8 +7,8 @@ public abstract class BaseDownloader : IDisposable
     protected readonly HttpClient _httpClient;
 
     protected bool _hasInitialized;
-    protected bool _shouldSaveAtDesktop;
-
+    
+    protected const string _folderName = "Pokz_Midias";
     protected string _outputDirectory;
     protected string[] _urlArray;
     protected static readonly char[] separator = [',', ';'];
@@ -29,8 +29,14 @@ public abstract class BaseDownloader : IDisposable
 
         if (outputDirectory.IsNullOrEmpty())
         {
-            _shouldSaveAtDesktop = true;
-            outputDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string appFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), _folderName);
+
+            if (!Directory.Exists(appFolder))
+            {
+                Directory.CreateDirectory(appFolder);
+            }
+
+            outputDirectory = appFolder;
         }
         else
         {
