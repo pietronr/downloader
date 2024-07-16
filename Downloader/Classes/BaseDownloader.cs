@@ -97,6 +97,7 @@ public abstract class BaseDownloader : IDisposable
         try
         {
             await Task.WhenAll(tasks);
+            Console.WriteLine("-------------------------------------------------\nDownload finalizado!\nPressione qualquer tecla para fechar essa tela.");
         }
         catch
         {
