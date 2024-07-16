@@ -27,6 +27,7 @@ public abstract class BaseDownloader : IDisposable
     /// </summary>
     public virtual void Initialize()
     {
+        Console.WriteLine("BEM VINDO AO POKZDOWNLOADER\n-------------------------------------------------");
         string? outputDirectory = ReadUserInput("Digite onde deseja salvar os vídeos ou deixe em branco caso queira salvar na Área de trabalho:");
 
         if (outputDirectory.IsNullOrEmpty())
