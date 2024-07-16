@@ -11,4 +11,14 @@ public static class Extensions
     {
         return string.Join("_", text.Split(Path.GetInvalidFileNameChars()));
     }
+
+    /// <summary>
+    /// Verifica se uma string é nula ou vazia.
+    /// </summary>
+    /// <param name="text">Texto que deve ser verificado.</param>
+    /// <returns><see langword="true"/> se a string for nula ou vazia.</returns>
+    public static bool IsNullOrEmpty(this string? text)
+    {
+        return text == null || text == string.Empty;
+    }
 }
