@@ -2,9 +2,8 @@
 using Downloader.Helpers;
 using YoutubeExplode.Videos.Streams;
 using YoutubeExplode.Videos;
-using Downloader.Classes;
 
-namespace Downloader.Classes.Youtube;
+namespace Downloader.Classes;
 
 public class YoutubeVideoDownloader : BaseDownloader
 {
@@ -15,43 +14,43 @@ public class YoutubeVideoDownloader : BaseDownloader
         _youtubeClient = new YoutubeClient();
     }
 
-    public override async Task DownloadVideo(string videoUrl, string outputDirectory)
+    public override async Task<DownloadedStream> DownloadVideo(string videoUrl)
     {
         var video = await _youtubeClient.Videos.GetAsync(videoUrl);
 
-        var (streams, saveOnlyAudio) = await ExtractVideoStream(video);
-
-        if (streams.Length > 0)
+        try
         {
-            string sanitizedTitle = video.Title.SanitizeFilePathString();
+            var (streamInfo, saveOnlyAudio) = await ExtractVideoStream(video);
 
-            var streamInfo = streams[0];
+            string sanitizedTitle = video.Title.SanitizeFilePathString();
             var stream = await _httpClient.GetStreamAsync(streamInfo.Url);
 
-            //criar pasta na área de trabalho caso a pessoa escolha essa opção
-            //resolver conversão mp3
-            Directory.CreateDirectory(outputDirectory);
-            string outputFilePath = Path.Combine(outputDirectory, $"{sanitizedTitle}.{streamInfo.Container}");
-            using var outputStream = File.Create(outputFilePath);
-            await stream.CopyToAsync(outputStream);
-
-            if (saveOnlyAudio)
-            {
-                string tempFilePath = Path.Combine(Path.GetTempPath(), "tempfile.mp3");
-                Mp3Helper.ConvertToMp3(tempFilePath, outputFilePath);
-                File.Delete(tempFilePath);
-            }
-
             Console.WriteLine("\nDownload concluído!");
-            Console.WriteLine($"Arquivo salvo como: {outputFilePath}");
+            return new DownloadedStream(stream, sanitizedTitle, saveOnlyAudio);
         }
-        else
+        catch
         {
-            Console.WriteLine($"\nNão foram encontrados streams para o vídeo {video.Title}.");
+            throw new InvalidOperationException("Erro no download do vídeo");
         }
     }
 
-    private async Task<(IStreamInfo[] streams, bool saveOnlyAudio)> ExtractVideoStream(Video video)
+    public override async Task SaveVideo(DownloadedStream stream)
+    {
+        string outputFilePath = Path.Combine(_outputDirectory, $"{stream.FileTitle}.mp4");
+        using var outputStream = File.Create(outputFilePath);
+        await stream.Stream.CopyToAsync(outputStream);
+
+        if (stream.ShouldSaveOnlyAudio)
+        {
+            string tempFilePath = Path.Combine(Path.GetTempPath(), "tempfile.mp3");
+            Mp3Helper.ConvertToMp3(tempFilePath, outputFilePath);
+            File.Delete(tempFilePath);
+        }
+
+        Console.WriteLine($"Arquivo salvo com sucesso: {outputFilePath}");
+    }
+
+    private async Task<(IStreamInfo streamInfo, bool saveOnlyAudio)> ExtractVideoStream(Video video)
     {
         var streamManifest = await _youtubeClient.Videos.Streams.GetManifestAsync(video.Id);
 
@@ -65,15 +64,15 @@ public class YoutubeVideoDownloader : BaseDownloader
         }
 
         int selectedOption = int.Parse(option);
-        IStreamInfo[] streams = [.. streamManifest.GetMuxedStreams().OrderByDescending(s => s.VideoQuality)];
+        IStreamInfo streamInfo = streamManifest.GetMuxedStreams().OrderByDescending(s => s.VideoQuality).ToArray()[0];
 
         if (selectedOption == 1)
         {
-            return (streams, false);
+            return (streamInfo, false);
         }
         else
         {
-            return (streams, true);
+            return (streamInfo, true);
         }
     }
 }
