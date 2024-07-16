@@ -65,7 +65,7 @@ public class YoutubeVideoDownloader : BaseDownloader
 
         if (_shouldSaveOnlyAudio)
         {
-            return (Path.Combine(_outputDirectory, $"{fileTitle}.mp3"), Path.Combine(Path.GetTempPath(), "tempfile.mp3"));
+            return (defaultPath, Path.Combine(_outputDirectory, $"{fileTitle}.mp3"));
         }
         else
         {
