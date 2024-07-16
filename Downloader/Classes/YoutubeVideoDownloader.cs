@@ -45,10 +45,10 @@ public class YoutubeVideoDownloader : BaseDownloader
 
         if (!File.Exists(mp4FilePath) || !File.Exists(mp3FilePath))
         {
-            using var mp4Stream = new FileStream(mp4FilePath, FileMode.Create, FileAccess.Write);
+            var mp4Stream = new FileStream(mp4FilePath, FileMode.Create, FileAccess.Write);
             await stream.Stream.CopyToAsync(mp4Stream);
 
-            mp4Stream.Dispose();
+            await mp4Stream.DisposeAsync();
 
             if (_shouldSaveOnlyAudio)
             {
