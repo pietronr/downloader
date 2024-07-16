@@ -174,15 +174,10 @@ public abstract class BaseDownloader : IDisposable
         List<Func<Task>> tasks = [];
 
         string currentUrl = string.Empty;
-        foreach (string url in _urlList)
-        {
-            currentUrl = url;
-            tasks.Add(async () => await DownloadAndSaveMidia(url));
-        }
 
         try
         {
-            await Task.WhenAll(tasks.Select(async task => await task()));
+            await TasksHelper.ExecuteTasksWithLimitedConcurrency(_urlList, DownloadAndSaveMidia);
         }
         catch (Exception ex)
         {
@@ -207,7 +202,7 @@ public abstract class BaseDownloader : IDisposable
     /// <summary>
     /// Realiza o download e o salvamento da mídia passada via URL.
     /// </summary>
-    public virtual async Task DownloadAndSaveMidia(string midiaUrl)
+    public virtual async Task DownloadAndSaveMidia(string midiaUrl, CancellationToken token)
     {
         DownloadedStream stream = await DownloadMidia(midiaUrl);
 
