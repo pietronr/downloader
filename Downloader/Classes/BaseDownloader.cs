@@ -60,6 +60,7 @@ public abstract class BaseDownloader : IDisposable
     /// </summary>
     private void SetUrls()
     {
+        _urlList.Clear();
         string urls = ReadUserInput("\nCole a URL do(s) vídeo(s) que deseja baixar. Se for mais de 1, coloque ',' ou ';' para separá-los.");
 
         List<string> invalidUrls = [];
@@ -111,25 +112,6 @@ public abstract class BaseDownloader : IDisposable
     }
 
     /// <summary>
-    /// Define se o usuário deseja continuar processando vídeos.
-    /// Caso ele finalize inserindo a tecla "N", o programa é encerrado
-    /// </summary>
-    /// <returns><see langword="true"/> caso o usuário tenha finalizado.</returns>
-    private async Task<bool> IsUserDone()
-    {
-        string continueInput = ReadUserInput("\nDeseja realizar mais downloads? Digite S (SIM) ou N (NÃO).").Trim();
-
-        while (continueInput == "S")
-        {
-            SetUrls();
-
-            await ExecuteDownload();
-        }
-
-        return true;
-    }
-
-    /// <summary>
     /// Inicializa e configura a classe para download.
     /// </summary>
     public virtual void Initialize()
@@ -146,6 +128,28 @@ public abstract class BaseDownloader : IDisposable
     }
 
     /// <summary>
+    /// Define se o usuário deseja continuar processando vídeos.
+    /// Caso ele finalize inserindo a tecla "N", o programa é encerrado
+    /// </summary>
+    /// <returns><see langword="true"/> caso o usuário tenha finalizado.</returns>
+    public virtual async Task<bool> IsUserDone()
+    {
+        string continueInput = ReadUserInput("\nDeseja realizar mais downloads? Digite S (SIM) ou N (NÃO).").Trim().ToLower();
+
+        while (continueInput == "s")
+        {
+            SetUrls();
+
+            await FullDownload();
+
+            continueInput = ReadUserInput("\nDeseja realizar mais downloads? Digite S (SIM) ou N (NÃO).").Trim().ToLower();
+        }
+
+        Console.WriteLine("Obrigado por usar! Pressione qualquer tecla para fechar essa tela.");
+        return true;
+    }
+
+    /// <summary>
     /// Executa o download das mídias informadas via URL.
     /// </summary>
     public virtual async Task<bool> ExecuteDownload()
@@ -156,6 +160,17 @@ public abstract class BaseDownloader : IDisposable
             return false;
         }
 
+        await FullDownload();
+
+        bool isDone = await IsUserDone();
+        return isDone;
+    }
+
+    /// <summary>
+    /// Realiza o download da lista completa de URLs.
+    /// </summary>
+    public async Task FullDownload()
+    {
         List<Task> tasks = [];
 
         string currentUrl = string.Empty;
@@ -187,8 +202,6 @@ public abstract class BaseDownloader : IDisposable
                 Console.WriteLine($"URL: {error.Key}; razão: {error.Value}");
             }
         }
-
-        return await IsUserDone();
     }
 
     /// <summary>
