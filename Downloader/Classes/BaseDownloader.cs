@@ -12,7 +12,7 @@ public abstract class BaseDownloader : IDisposable
 
     protected const string _folderName = "Pokz_Midias";
     protected string _outputDirectory;
-    protected string[] _urlArray;
+    protected List<string> _urlList;
     protected static readonly char[] separator = [',', ';'];
 
     protected Dictionary<string, string> _errors;
@@ -21,17 +21,16 @@ public abstract class BaseDownloader : IDisposable
     {
         _httpClient = new HttpClient();
         _outputDirectory = string.Empty;
-        _urlArray = [];
+        _urlList = [];
         _errors = [];
     }
 
     /// <summary>
-    /// Inicializa e configura a classe para download.
+    /// Define onde os arquivos serão salvos.
     /// </summary>
-    public virtual void Initialize()
+    protected void SetOutputDirectoryPath()
     {
-        Console.WriteLine("BEM VINDO AO POKZDOWNLOADER\n-------------------------------------------------");
-        string? outputDirectory = ReadUserInput("Digite onde deseja salvar os vídeos ou deixe em branco caso queira salvar na Área de trabalho:");
+        string outputDirectory = ReadUserInput("Digite onde deseja salvar os vídeos ou deixe em branco caso queira salvar na Área de trabalho:");
 
         if (outputDirectory.IsNullOrEmpty())
         {
@@ -54,18 +53,52 @@ public abstract class BaseDownloader : IDisposable
         }
 
         _outputDirectory = outputDirectory;
+    }
 
-        string? urls = ReadUserInput("\nCole a URL do(s) vídeo(s) que deseja baixar. Se for mais de 1, coloque ',' ou ';' para separá-los.");
+    /// <summary>
+    /// Define as URLs que devem ser consideradas para download.
+    /// </summary>
+    private void SetUrls()
+    {
+        string urls = ReadUserInput("\nCole a URL do(s) vídeo(s) que deseja baixar. Se for mais de 1, coloque ',' ou ';' para separá-los.");
 
-        _urlArray = urls!.Split(separator, StringSplitOptions.TrimEntries);
+        List<string> invalidUrls = [];
 
-        string? option = ReadUserInput("\nDigite a opção que deseja para salvamento:\n" +
-                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio (.MP3)\n3 - Apenas áudio 320KBPS (.MP3)")?.Trim();
+        foreach (string url in urls!.Split(separator, StringSplitOptions.TrimEntries))
+        {
+            if (url.IsValidYouTubeUrl())
+            {
+                _urlList.Add(url);
+            }
+            else
+            {
+                invalidUrls.Add(url);
+            }
+        }
 
-        while (option == null || (option != "1" && option != "2" && option != "3"))
+        if (invalidUrls.Count > 0)
+        {
+            Console.WriteLine("\nAlgumas URLs são inválidas e não serão consideradas, são elas:");
+
+            foreach (string invalidUrl in invalidUrls)
+            {
+                Console.WriteLine(invalidUrl);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Define como o download será feito.
+    /// </summary>
+    private void SetDownloadOption()
+    {
+        string option = ReadUserInput("\nDigite a opção que deseja para salvamento:\n" +
+                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio (.MP3)\n3 - Apenas áudio 320KBPS (.MP3)").Trim();
+
+        while (option != "1" && option != "2" && option != "3")
         {
             Console.WriteLine("Opção inválida");
-            option = ReadUserInput("Digite uma opção válida:");
+            option = ReadUserInput("Digite uma opção válida:").Trim();
         }
 
         int selectedOption = int.Parse(option);
@@ -75,6 +108,39 @@ public abstract class BaseDownloader : IDisposable
             if (selectedOption == 3) _saveAs320kbps = true;
             _shouldSaveOnlyAudio = true;
         }
+    }
+
+    /// <summary>
+    /// Define se o usuário deseja continuar processando vídeos.
+    /// Caso ele finalize inserindo a tecla "N", o programa é encerrado
+    /// </summary>
+    /// <returns><see langword="true"/> caso o usuário tenha finalizado.</returns>
+    private async Task<bool> IsUserDone()
+    {
+        string continueInput = ReadUserInput("\nDeseja realizar mais downloads? Digite S (SIM) ou N (NÃO).").Trim();
+
+        while (continueInput == "S")
+        {
+            SetUrls();
+
+            await ExecuteDownload();
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Inicializa e configura a classe para download.
+    /// </summary>
+    public virtual void Initialize()
+    {
+        Console.WriteLine("BEM VINDO AO POKZDOWNLOADER\n-------------------------------------------------");
+
+        SetOutputDirectoryPath();
+
+        SetUrls();
+
+        SetDownloadOption();
 
         _hasInitialized = true;
     }
@@ -87,12 +153,13 @@ public abstract class BaseDownloader : IDisposable
         if (!_hasInitialized)
         {
             Console.WriteLine("Inicialize a classe para execução do dowload.");
+            return false;
         }
 
         List<Task> tasks = [];
 
         string currentUrl = string.Empty;
-        foreach (string url in _urlArray)
+        foreach (string url in _urlList)
         {
             currentUrl = url;
             tasks.Add(DownloadAndSaveMidia(currentUrl));
@@ -108,7 +175,7 @@ public abstract class BaseDownloader : IDisposable
         }
         finally
         {
-            Console.WriteLine("-------------------------------------------------\nDOWNLOAD FINALIZADO!");
+            Console.WriteLine("-------------------------------------------------\nPROCESSO FINALIZADO!");
         }
 
         if (_errors.Count > 0)
@@ -119,11 +186,9 @@ public abstract class BaseDownloader : IDisposable
             {
                 Console.WriteLine($"URL: {error.Key}; razão: {error.Value}");
             }
-
-            return false;
         }
 
-        return true;
+        return await IsUserDone();
     }
 
     /// <summary>
@@ -152,10 +217,10 @@ public abstract class BaseDownloader : IDisposable
     /// </summary>
     /// <param name="message">Mensagem a ser mostrada para o usuário.</param>
     /// <returns>Texto digitado pelo usuário.</returns>
-    protected static string? ReadUserInput(string message)
+    protected static string ReadUserInput(string message)
     {
         Console.WriteLine(message);
-        return Console.ReadLine();
+        return Console.ReadLine() ?? "";
     }
 
     public void Dispose()
