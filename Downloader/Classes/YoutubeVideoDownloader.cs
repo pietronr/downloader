@@ -82,7 +82,7 @@ public class YoutubeVideoDownloader : BaseDownloader
     {
         var streamManifest = await _youtubeClient.Videos.Streams.GetManifestAsync(video.Id);
 
-       IStreamInfo streamInfo = streamManifest.GetMuxedStreams().OrderByDescending(s => s.VideoQuality).ToArray()[0];
+       IStreamInfo streamInfo = streamManifest.GetAudioStreams().OrderByDescending(s => s.Bitrate).ToArray()[0];
 
         return streamInfo;
     }
