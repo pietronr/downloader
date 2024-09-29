@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="NAudio.Lame" Version="2.1.0" />
-    <PackageReference Include="YoutubeExplode" Version="6.3.16" />
+    <PackageReference Include="YoutubeExplode" Version="6.4.2" />
   </ItemGroup>
 
   <Target Name="MoveDllsToSubfolderMac" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
