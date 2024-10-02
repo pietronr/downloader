@@ -4,7 +4,7 @@ namespace Downloader.Classes;
 
 public abstract class BaseDownloader : IDisposable
 {
-    protected readonly HttpClient _httpClient;
+    protected readonly HttpClient? _httpClient;
 
     protected bool _hasInitialized;
     protected bool _shouldSaveOnlyAudio;
@@ -15,9 +15,11 @@ public abstract class BaseDownloader : IDisposable
     protected List<string> _urlList;
     protected static readonly char[] separator = [',', ';'];
 
-    protected BaseDownloader()
+    protected BaseDownloader(bool initializeClient)
     {
-        _httpClient = new HttpClient();
+        if (initializeClient) 
+            _httpClient = new HttpClient();
+
         _outputDirectory = string.Empty;
         _urlList = [];
     }
@@ -189,21 +191,26 @@ public abstract class BaseDownloader : IDisposable
     /// </summary>
     public virtual async Task DownloadAndSaveMidia(string midiaUrl, CancellationToken token)
     {
-        DownloadedStream stream = await DownloadMidia(midiaUrl);
+        DownloadedFilePath filePath = await DownloadMidia(midiaUrl);
 
-        await SaveMidia(stream);
+        if (_shouldSaveOnlyAudio)
+        {
+            await ConvertMidia(filePath);
+        }
+
+        Console.WriteLine($"Arquivo salvo com sucesso!");
     }
 
     /// <summary>
     /// Controla a operação de download da mídia.
     /// </summary>
     /// <param name="url">URL para download.</param>
-    public abstract Task<DownloadedStream> DownloadMidia(string midiaUrl);
+    public abstract Task<DownloadedFilePath> DownloadMidia(string midiaUrl);
 
     /// <summary>
-    /// Controla a operação de salvamento da mídia.
+    /// Controla a operação de conversão da mídia, caso necessário.
     /// </summary>
-    public abstract Task SaveMidia(DownloadedStream stream);
+    public abstract Task ConvertMidia(DownloadedFilePath filePath);
 
     /// <summary>
     /// Lê a entrada do usuário no console.
@@ -224,6 +231,6 @@ public abstract class BaseDownloader : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        _httpClient.Dispose();
+        _httpClient?.Dispose();
     }
 }

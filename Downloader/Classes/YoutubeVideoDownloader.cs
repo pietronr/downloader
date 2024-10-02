@@ -8,60 +8,51 @@ namespace Downloader.Classes;
 public class YoutubeVideoDownloader : BaseDownloader
 {
     private readonly YoutubeClient _youtubeClient;
+    private readonly StreamClient _streamClient;
 
-    public YoutubeVideoDownloader() : base()
+    public YoutubeVideoDownloader() : base(true)
     {
         _youtubeClient = new YoutubeClient();
+        _streamClient = new StreamClient(_httpClient!);
     }
 
-    public override async Task<DownloadedStream> DownloadMidia(string midiaUrl)
+    public override async Task<DownloadedFilePath> DownloadMidia(string midiaUrl)
     {
         Console.WriteLine("\nIniciando download...");
 
         try
         {
-            var video = await _youtubeClient.Videos.GetAsync(midiaUrl);
+            Video video = await _youtubeClient.Videos.GetAsync(midiaUrl);
 
-            var streamInfo = await ExtractStreamInfo(video);
+            IStreamInfo streamInfo = await ExtractStreamInfo(video);
 
-            string sanitizedTitle = video.Title.SanitizeFilePathString();
+            var (mp4FilePath, mp3FilePath) = SetFilePaths(video.Title.SanitizeFilePathString());
 
-            var stream = await _httpClient.GetStreamAsync(streamInfo.Url);
+           if (!File.Exists(mp4FilePath))
+           {
+                await _streamClient.DownloadAsync(streamInfo, mp4FilePath);
 
-            Console.WriteLine("\nDownload concluído!");
-            return new DownloadedStream(stream, sanitizedTitle);
+                Console.WriteLine("\nDownload concluído!");
+                return new DownloadedFilePath(mp4FilePath, mp3FilePath);
+           }
+           else
+           {
+                Console.WriteLine($"Arquivo já existente na pasta selecionada!");
+                throw new InvalidOperationException(); 
+           }
         }
-        catch
+        catch (Exception ex) 
         {
-            throw new InvalidOperationException("Erro no download do vídeo");
+            throw new InvalidOperationException($"Erro no download do vídeo. {ex.Message}");
         }
     }
 
-    public override async Task SaveMidia(DownloadedStream stream)
+    public override async Task ConvertMidia(DownloadedFilePath filePath)
     {
-        Console.WriteLine("\nSalvando mídia...");
+        Console.WriteLine($"Convertendo para .mp3: {filePath.Mp4FilePath}");
+        Mp3Helper.ConvertToMp3(filePath.Mp4FilePath, filePath.Mp3FilePath, _saveAs320kbps);
 
-        var (mp4FilePath, mp3FilePath) = SetFilePaths(stream.FileTitle);
-
-        if (!File.Exists(mp4FilePath) || !File.Exists(mp3FilePath))
-        {
-            var mp4Stream = new FileStream(mp4FilePath, FileMode.Create, FileAccess.Write);
-            await stream.Stream.CopyToAsync(mp4Stream);
-
-            await mp4Stream.DisposeAsync();
-
-            if (_shouldSaveOnlyAudio)
-            {
-                Console.WriteLine($"Convertendo para .mp3: {mp4FilePath}");
-                Mp3Helper.ConvertToMp3(mp4FilePath, mp3FilePath, _saveAs320kbps);
-            }
-
-            Console.WriteLine($"Arquivo salvo com sucesso!");
-        }
-        else
-        {
-            Console.WriteLine($"Arquivo já existente na pasta selecionada!");
-        }
+        await Task.CompletedTask;
     }
 
     private (string mp4FilePath, string mp3FilePath) SetFilePaths(string fileTitle)
@@ -82,7 +73,7 @@ public class YoutubeVideoDownloader : BaseDownloader
     {
         var streamManifest = await _youtubeClient.Videos.Streams.GetManifestAsync(video.Id);
 
-       IStreamInfo streamInfo = streamManifest.GetAudioStreams().OrderByDescending(s => s.Bitrate).ToArray()[0];
+        IStreamInfo streamInfo = streamManifest.GetAudioStreams().OrderByDescending(s => s.Bitrate).ToArray()[0];
 
         return streamInfo;
     }
