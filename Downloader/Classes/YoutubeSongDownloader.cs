@@ -5,12 +5,12 @@ using YoutubeExplode.Videos;
 
 namespace Downloader.Classes;
 
-public class YoutubeVideoDownloader : BaseDownloader
+public class YoutubeSongDownloader : BaseDownloader
 {
     private readonly YoutubeClient _youtubeClient;
     private readonly StreamClient _streamClient;
 
-    public YoutubeVideoDownloader() : base(true)
+    public YoutubeSongDownloader() : base(true)
     {
         _youtubeClient = new YoutubeClient();
         _streamClient = new StreamClient(_httpClient!);
@@ -59,14 +59,7 @@ public class YoutubeVideoDownloader : BaseDownloader
     {
         string defaultPath = Path.Combine(_outputDirectory, $"{fileTitle}.mp4");
 
-        if (_shouldSaveOnlyAudio)
-        {
-            return (defaultPath, Path.Combine(_outputDirectory, $"{fileTitle}.mp3"));
-        }
-        else
-        {
-            return (defaultPath, defaultPath);
-        }
+        return (defaultPath, Path.Combine(_outputDirectory, $"{fileTitle}.mp3"));
     }
 
     private async Task<IStreamInfo> ExtractStreamInfo(Video video)

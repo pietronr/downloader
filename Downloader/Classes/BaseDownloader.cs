@@ -7,7 +7,6 @@ public abstract class BaseDownloader : IDisposable
     protected readonly HttpClient? _httpClient;
 
     protected bool _hasInitialized;
-    protected bool _shouldSaveOnlyAudio;
     protected bool _saveAs320kbps;
 
     protected const string _folderName = "Pokz_Midias";
@@ -94,7 +93,7 @@ public abstract class BaseDownloader : IDisposable
     private void SetDownloadOption()
     {
         string option = ReadUserInput("\nDigite a opção que deseja para salvamento:\n" +
-                                       "1 - Vídeo completo (áudio e vídeo)\n2 - Apenas áudio (.MP3)\n3 - Apenas áudio 320KBPS (.MP3)").Trim();
+                                       "1 - Áudio simples (.MP3)\n2 - Áudio 320KBPS (.MP3)\n3 - Áudio Wav (.WAV)").Trim();
 
         while (option != "1" && option != "2" && option != "3")
         {
@@ -104,11 +103,7 @@ public abstract class BaseDownloader : IDisposable
 
         int selectedOption = int.Parse(option);
 
-        if (selectedOption == 2 || selectedOption == 3)
-        {
-            if (selectedOption == 3) _saveAs320kbps = true;
-            _shouldSaveOnlyAudio = true;
-        }
+        if (selectedOption == 3) _saveAs320kbps = true;
     }
 
     /// <summary>
@@ -193,10 +188,7 @@ public abstract class BaseDownloader : IDisposable
     {
         DownloadedFilePath filePath = await DownloadMidia(midiaUrl);
 
-        if (_shouldSaveOnlyAudio)
-        {
-            await ConvertMidia(filePath);
-        }
+        await ConvertMidia(filePath);
 
         Console.WriteLine($"Arquivo salvo com sucesso!");
     }
