@@ -49,7 +49,7 @@ public class YoutubeSongDownloader : BaseDownloader
 
     public override async Task ConvertMidia(DownloadedFilePath filePath)
     {
-        Console.WriteLine($"Convertendo para .mp3: {filePath.InputFilePath}");
+        Console.WriteLine($"Convertendo arquivo: {filePath.InputFilePath}");
         Mp3Helper.ConvertToMp3OrWav(filePath.InputFilePath, filePath.OutputFilePath, _saveAs320kbps, _saveAsWav);
 
         await Task.CompletedTask;
