@@ -26,14 +26,14 @@ public class YoutubeSongDownloader : BaseDownloader
 
             IStreamInfo streamInfo = await ExtractStreamInfo(video);
 
-            var (mp4FilePath, mp3FilePath) = SetFilePaths(video.Title.SanitizeFilePathString());
+            var (inputFilePath, outputFilePath) = SetFilePaths(video.Title);
 
-           if (!File.Exists(mp4FilePath))
+           if (!File.Exists(inputFilePath))
            {
-                await _streamClient.DownloadAsync(streamInfo, mp4FilePath);
+                await _streamClient.DownloadAsync(streamInfo, inputFilePath);
 
                 Console.WriteLine("\nDownload concluído!");
-                return new DownloadedFilePath(mp4FilePath, mp3FilePath);
+                return new DownloadedFilePath(inputFilePath, outputFilePath);
            }
            else
            {
@@ -49,17 +49,28 @@ public class YoutubeSongDownloader : BaseDownloader
 
     public override async Task ConvertMidia(DownloadedFilePath filePath)
     {
-        Console.WriteLine($"Convertendo para .mp3: {filePath.Mp4FilePath}");
-        Mp3Helper.ConvertToMp3(filePath.Mp4FilePath, filePath.Mp3FilePath, _saveAs320kbps);
+        Console.WriteLine($"Convertendo para .mp3: {filePath.InputFilePath}");
+        Mp3Helper.ConvertToMp3OrWav(filePath.InputFilePath, filePath.OutputFilePath, _saveAs320kbps, _saveAsWav);
 
         await Task.CompletedTask;
     }
 
-    private (string mp4FilePath, string mp3FilePath) SetFilePaths(string fileTitle)
+    private (string inputFilePath, string outputFilePath) SetFilePaths(string fileTitle)
     {
-        string defaultPath = Path.Combine(_outputDirectory, $"{fileTitle}.mp4");
+        fileTitle = fileTitle.SanitizeFilePathString();
+        string inputPath = Path.Combine(_outputDirectory, $"{fileTitle}.mp4");
 
-        return (defaultPath, Path.Combine(_outputDirectory, $"{fileTitle}.mp3"));
+        string outputFilePath;
+        if (_saveAsWav)
+        {
+            outputFilePath = Path.Combine(_outputDirectory, $"{fileTitle}.wav");
+        }
+        else
+        {
+            outputFilePath = Path.Combine(_outputDirectory, $"{fileTitle}.mp3");
+        }
+
+        return (inputPath, outputFilePath);
     }
 
     private async Task<IStreamInfo> ExtractStreamInfo(Video video)

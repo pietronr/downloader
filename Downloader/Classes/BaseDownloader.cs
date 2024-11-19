@@ -8,6 +8,7 @@ public abstract class BaseDownloader : IDisposable
 
     protected bool _hasInitialized;
     protected bool _saveAs320kbps;
+    protected bool _saveAsWav;
 
     protected const string _folderName = "Pokz_Midias";
     protected string _outputDirectory;
@@ -103,7 +104,8 @@ public abstract class BaseDownloader : IDisposable
 
         int selectedOption = int.Parse(option);
 
-        if (selectedOption == 3) _saveAs320kbps = true;
+        if (selectedOption == 2) _saveAs320kbps = true;
+        else if (selectedOption == 3) _saveAsWav = true;
     }
 
     /// <summary>
